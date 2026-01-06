@@ -15,7 +15,16 @@ TARGETARCH ?= amd64
 format:
 	gofmt -s -w ./
 
-build: format
+get:
+	go mod download
+
+test:
+	go test ./...
+
+lint:
+	@echo "lint is optional (use golangci-lint)"
+
+build: format get
 	CGO_ENABLED=0 GOOS=$(TARGETOS) GOARCH=$(TARGETARCH) \
 	go build -o $(APP_NAME) \
 	-ldflags "-X github.com/i-stanko/infra-bot/cmd.appVersion=$(VERSION)" .
