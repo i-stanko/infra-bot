@@ -10,19 +10,13 @@ IMAGE_TAG := $(REGISTRY)/$(NAMESPACE)/$(APP_NAME):$(VERSION)-$(GIT_SHA)
 TARGETOS ?= linux
 TARGETARCH ?= amd64
 
-.PHONY: format build image push clean linux windows mac arm
+.PHONY: format get build image push clean linux windows mac arm
 
 format:
 	gofmt -s -w ./
 
 get:
 	go mod download
-
-test:
-	go test ./...
-
-lint:
-	@echo "lint is optional (use golangci-lint)"
 
 build: format get
 	CGO_ENABLED=0 GOOS=$(TARGETOS) GOARCH=$(TARGETARCH) \
