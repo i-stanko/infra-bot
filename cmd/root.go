@@ -6,8 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var appVersion = "dev"
-
 var rootCmd = &cobra.Command{
 	Use:   "infra-bot",
 	Short: "Personal infrastructure automation and monitoring CLI",
@@ -17,8 +15,7 @@ and monitoring systems.`,
 }
 
 func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
