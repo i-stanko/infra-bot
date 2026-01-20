@@ -1,49 +1,38 @@
-APP_NAME := infra-bot
-REGISTRY := quay.io
-NAMESPACE := istanko
+BINARY=infra-bot
 
-VERSION ?= dev
-GIT_SHA := $(shell git rev-parse --short HEAD)
+GO=go
+GOBUILD=$(GO) build
+GOTEST=$(GO) test
+GOLINT=$(GO) vet
 
-IMAGE_TAG := $(REGISTRY)/$(NAMESPACE)/$(APP_NAME):$(VERSION)-$(GIT_SHA)
+IMAGE_NAME=infra-bot
+TAG=latest
 
-TARGETOS ?= linux
-TARGETARCH ?= amd64
+LDFLAGS=-X github.com/i-stanko/infra-bot/internal/version.Version=dev \
+        -X github.com/i-stanko/infra-bot/internal/version.Commit=dev \
+        -X github.com/i-stanko/infra-bot/internal/version.BuildDate=unknown
 
-.PHONY: format get build image push clean linux windows mac arm
+.PHONY: all build run test lint clean docker-build docker-run
 
-format:
-	gofmt -s -w ./
+all: build
 
-get:
-	go mod download
+build:
+	$(GOBUILD) -ldflags "$(LDFLAGS)" -o $(BINARY) ./main.go
 
-build: format get
-	CGO_ENABLED=0 GOOS=$(TARGETOS) GOARCH=$(TARGETARCH) \
-	go build -o $(APP_NAME) \
-	-ldflags "-X github.com/i-stanko/infra-bot/cmd.appVersion=$(VERSION)" .
+run: build
+	./$(BINARY) start
 
-image:
-	docker build \
-	--build-arg TARGETOS=$(TARGETOS) \
-	--build-arg TARGETARCH=$(TARGETARCH) \
-	-t $(IMAGE_TAG) .
+test:
+	$(GOTEST) ./...
 
-push:
-	docker push $(IMAGE_TAG)
-
-linux:
-	make image TARGETOS=linux TARGETARCH=amd64
-
-arm:
-	make image TARGETOS=linux TARGETARCH=arm64
-
-mac:
-	make image TARGETOS=darwin TARGETARCH=arm64
-
-windows:
-	make image TARGETOS=windows TARGETARCH=amd64
+lint:
+	$(GOLINT) ./...
 
 clean:
-	rm -f $(APP_NAME)
-	docker rmi -f $(IMAGE_TAG) || true
+	rm -f $(BINARY)
+
+docker-build:
+	docker build -t $(IMAGE_NAME):$(TAG) .
+
+docker-run:
+	docker run --rm -e TELE_TOKEN=$$TELE_TOKEN $(IMAGE_NAME):$(TAG) start

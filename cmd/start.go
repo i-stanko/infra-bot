@@ -15,9 +15,16 @@ var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start Telegram bot",
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg, err := config.LoadConfig()
-		if err != nil {
-			log.Fatal(err)
+		var cfg *config.Config
+		var err error
+
+		if dryRun {
+			cfg = &config.Config{}
+		} else {
+			cfg, err = config.LoadConfig()
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
